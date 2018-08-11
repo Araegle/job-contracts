@@ -36,7 +36,7 @@ contract JobApp is AragonApp {
      */
     function apply(bytes32 node, string jobName) external {
         require(msg.sender == nodeOwner(node));
-        require(!hasBeenHired(node, jobName));
+        require(!hasApplied(node, jobName));
         require(jobs[keccak256(jobName)].status != JobStatus.Closed);
         applications[keccak256(node, jobName)] = true;
         Applied(node, jobName);
