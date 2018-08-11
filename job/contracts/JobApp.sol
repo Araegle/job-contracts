@@ -11,7 +11,7 @@ contract JobApp is AragonApp {
     event Hired(bytes32 node, string jobName);
 
     /// State
-    ENS ens = ENS(ens_address);
+    ENS ens = ENS(0x314159265dD8dbb310642f98f50C066173C1259b);
     enum JobStatus { NowHiring, Interviewing, HiringClosed }
     struct Job {
       string description;
@@ -65,5 +65,21 @@ contract JobApp is AragonApp {
     function hire(bytes32 node, string jobName) auth(MANAGER_ROLE) external {
         hired[keccak256(node, jobName)] = true;
         Hired(node, jobName);
+    }
+
+    function getJob(string _name) public view returns(string, JobStatus) {
+        return (jobs[keccak256(_name)].description, jobs[keccak256(_name)].status);
+    }
+
+    function hasApplied(bytes32 _node, string _job) public view returns(bool) {
+      return applications[keccak256(_node, _job)];
+    }
+
+    function hasAdvanced(bytes32 _node, string _job) public view returns(bool) {
+      return interviewing[keccak256(_node, _job)];
+    }
+
+    function hasBeenHired(bytes32 _node, string _job) public view returns(bool) {
+      return hired[keccak256(_node, _job)];
     }
 }
