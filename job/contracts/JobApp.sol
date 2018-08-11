@@ -14,12 +14,9 @@ contract JobApp is AragonApp {
     /// State
     ENS ens = ENS(0x314159265dD8dbb310642f98f50C066173C1259b);
 
-    enum JobStatus { Open, Closed }
-
     struct Job {
         string description;
-        JobStatus status;
-        bool posted;
+        bool open;
     }
 
     mapping (bytes32 => Job) internal jobs;
@@ -37,7 +34,7 @@ contract JobApp is AragonApp {
     function apply(bytes32 node, string jobName) external {
         require(msg.sender == nodeOwner(node));
         require(!hasApplied(node, jobName));
-        require(jobs[keccak256(jobName)].status != JobStatus.Closed);
+        require(jobs[keccak256(jobName)].open);
         applications[keccak256(node, jobName)] = true;
         Applied(node, jobName);
     }
@@ -47,11 +44,10 @@ contract JobApp is AragonApp {
      * @param step Amount to decrement by
      */
     function openJob(string _name, string _description) external auth(OWNER_ROLE) {
-        require(jobs[_name].posted == false);
+        require(jobs[_name] == 0);
         Job memory job = Job({
             description: _description,
-            status: JobStatus.Open,
-            posted: true
+            open: true
         });
         jobs[keccak256(_name)] = job;
         JobOpened(_name, _description);
@@ -62,7 +58,7 @@ contract JobApp is AragonApp {
      * @param step Amount to decrement by
      */
     function closeJob(string _name, string _node) external auth(OWNER_ROLE) {
-        jobs[keccak256(_name)].status = JobStatus.Closed;
+        jobs[keccak256(_name)].open = false;
         JobClosed(_name, _node);
     }
 
@@ -73,21 +69,16 @@ contract JobApp is AragonApp {
     function hire(bytes32 node, string jobName) external auth(MANAGER_ROLE) {
         require(hasApplied(node, jobName));
         require(!hasBeenHired(node, jobName));
-        require(jobs[keccak256(jobName)].status == JobStatus.Open);
+        require(jobs[keccak256(jobName)].open);
         hired[keccak256(node, jobName)] = true;
         Hired(node, jobName);
     }
 
     function getJobDetails(string _name) public view returns(string, string) {
-        require(jobs[_name].posted == true);
+        require(jobs[_name] != 0);
         string description = jobs[keccak256(_name)].description;
-        uint8 status = jobs[keccak256(_name)].status;
-        if (status == 0) {
-            return (description, "Open");
-        }
-        if (status == 1) {
-            return (description, "Closed");
-        }
+        string status = jobs[keccak256(_name)].open ? "Open" : "Closed";
+        return (description, status);
     }
 
     function hasApplied(bytes32 _node, string _job) public view returns(bool) {
