@@ -10,7 +10,6 @@ contract JobApp is AragonApp {
     event Hired(bytes32 node, string jobName);
     event JobOpened(string indexed name, string description);
     event JobClosed(string indexed name, bytes32 _hiree);
-    event DetailsReleased(bytes32 node, string indexed jobName);
 
     /// State
     ENS ens = ENS(0x314159265dD8dbb310642f98f50C066173C1259b);
@@ -20,18 +19,12 @@ contract JobApp is AragonApp {
     struct Job {
         string description;
         JobStatus status;
-    }
-
-    struct Hire {
-        bytes32 node;
-        string jobName;
-        string hiringDetails;
+        bool posted;
     }
 
     mapping (bytes32 => Job) internal jobs;
     mapping (bytes32 => bool) internal applications;
     mapping (bytes32 => bool) internal hired;
-    mapping (bytes32 => Hire) internal hires;
 
     /// ACL
     bytes32 constant public OWNER_ROLE = keccak256("OWNER_ROLE");
@@ -43,6 +36,8 @@ contract JobApp is AragonApp {
      */
     function apply(bytes32 node, string jobName) external {
         require(msg.sender == nodeOwner(node));
+        require(!hasBeenHired(node, jobName));
+        require(jobs[keccak256(jobName)].status != JobStatus.Closed);
         applications[keccak256(node, jobName)] = true;
         Applied(node, jobName);
     }
@@ -52,9 +47,11 @@ contract JobApp is AragonApp {
      * @param step Amount to decrement by
      */
     function openJob(string _name, string _description) external auth(OWNER_ROLE) {
+        require(jobs[_name].posted == false);
         Job memory job = Job({
             description: _description,
-            status: JobStatus.Open
+            status: JobStatus.Open,
+            posted: true
         });
         jobs[keccak256(_name)] = job;
         JobOpened(_name, _description);
@@ -66,7 +63,7 @@ contract JobApp is AragonApp {
      */
     function closeJob(string _name, string _node) external auth(OWNER_ROLE) {
         jobs[keccak256(_name)].status = JobStatus.Closed;
-        JobAdvanced(_name, _node);
+        JobClosed(_name, _node);
     }
 
     /**
@@ -74,22 +71,15 @@ contract JobApp is AragonApp {
      * @param step Amount to increment by
      */
     function hire(bytes32 node, string jobName) external auth(MANAGER_ROLE) {
-        require(hasAdvanced(node, jobName));
+        require(hasApplied(node, jobName));
+        require(!hasBeenHired(node, jobName));
+        require(jobs[keccak256(jobName)].status == JobStatus.Open);
         hired[keccak256(node, jobName)] = true;
         Hired(node, jobName);
     }
 
-    /**
-     * @notice Apply for a job by `jobName`
-     * @param step Amount to increment by
-     */
-    function releaseHiringDetails(bytes32 node, string jobName, string details) external auth(MANAGER_ROLE) {
-        require(hasBeenHired(node, jobName));
-        hires[keccak256(jobName)] = Hire(node, jobName, details);
-        DetailsReleased(node, jobName);
-    }
-
     function getJobDetails(string _name) public view returns(string, string) {
+        require(jobs[_name].posted == true);
         string description = jobs[keccak256(_name)].description;
         uint8 status = jobs[keccak256(_name)].status;
         if (status == 0) {
@@ -98,10 +88,6 @@ contract JobApp is AragonApp {
         if (status == 1) {
             return (description, "Closed");
         }
-    }
-
-    function getHiringDetails(string _name) public view returns(string) {
-        return hires[keccak256(_name)].hiringDetails;
     }
 
     function hasApplied(bytes32 _node, string _job) public view returns(bool) {
