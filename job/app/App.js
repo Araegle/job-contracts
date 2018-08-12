@@ -21,7 +21,7 @@ export default class App extends React.Component {
     return (
       <AppContainer>
         <div>
-          <Input onClick={() => this.props.app.decrement(1)}>Enter your ens name</Button>
+          <Input onClickkjgh={() => this.props.app.decrement(1)}>Enter your ens name</Input>
           <Button onClick={() => this.props.app.increment(1)}>Increment</Button>
         </div>
       </AppContainer>
