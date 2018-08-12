@@ -3,6 +3,7 @@ import {
   AragonApp,
   Button,
   Text,
+  Input,
 
   observe
 } from '@aragon/ui'
@@ -20,8 +21,7 @@ export default class App extends React.Component {
     return (
       <AppContainer>
         <div>
-          <ObservedCount observable={this.props.observable} />
-          <Button onClick={() => this.props.app.decrement(1)}>Decrement</Button>
+          <Input onClick={() => this.props.app.decrement(1)}>Enter your ens name</Button>
           <Button onClick={() => this.props.app.increment(1)}>Increment</Button>
         </div>
       </AppContainer>

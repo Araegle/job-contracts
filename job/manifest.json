@@ -1,6 +1,6 @@
 {
-  "name": "Counter",
-  "description": "An application for Aragon",
+  "name": "Job",
+  "description": "An application for transparent hiring in Aragon DAOs.",
   "icons": [{
     "src": "/dist/images/icon.png",
     "sizes": "22x22"

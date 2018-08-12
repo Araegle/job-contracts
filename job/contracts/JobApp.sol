@@ -37,7 +37,7 @@ contract JobApp is AragonApp {
     }
 
     function openJob(bytes32 _name, string _description) external auth(OWNER_ROLE) {
-        require(! jobs[_name].exists);
+        require(!jobs[_name].exists);
 
         Job memory job = Job({
             description: _description,

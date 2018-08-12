@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "roles": [
     {
-      "name": "Increment the counter",
-      "id": "INCREMENT_ROLE",
+      "name": "Owner of the company",
+      "id": "OWNER_ROLE",
       "params": []
     },
     {
-      "name": "Decrement the counter",
-      "id": "DECREMENT_ROLE",
+      "name": "Manager at company",
+      "id": "MANAGER_ROLE",
       "params": []
     }
   ],
